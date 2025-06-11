@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\User;
+use Livewire\Attributes\On;
 
 class Users extends Component
 
@@ -15,127 +16,82 @@ class Users extends Component
     public $email;
     public $password;
     public $role_id;
-    public $editingUserId;
 
     public $showEditModal = false;
     public $showCreateModal = false;
-    public $userIdToDelete = null;
-    public $confirmationDelete = false;
-
+    public $showDeleteModal = false;
     public function mount()
+
     {
         $this->users = User::all();
 
     }
 
-    public function store()
+    public function create()
     {
         $this->validate([
-            'name' => 'required',
+            'name' => 'required|min:3',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:6',
-            'role_id' => 'required'
+            'role_id' => 'required|in:1,2'
+        ], [
+            'name.required' => 'O nome é obrigatório',
+            'name.min' => 'O nome deve ter no mínimo 3 caracteres',
+            'email.required' => 'O email é obrigatório',
+            'email.email' => 'Digite um email válido',
+            'email.unique' => 'Este email já está em uso',
+            'password.required' => 'A senha é obrigatória',
+            'password.min' => 'A senha deve ter no mínimo 6 caracteres',
+            'role_id.required' => 'Selecione um papel para o usuário',
+            'role_id.in' => 'Papel inválido'
         ]);
 
         User::create([
             'name' => $this->name,
             'email' => $this->email,
-            'password' => bcrypt($this->password),
+            'password' => $this->password,
             'role_id' => $this->role_id,
         ]);
 
         $this->reset(['name', 'email', 'password', 'role_id']);
-        $this->showCreateModal = false;
         $this->users = User::all();
-        session()->flash('message', 'Usuário criado com sucesso.');
-    }
-
-    public function edit($id)
-    {
-        $this->editingUserId = $id;
-        $this->user = User::findOrFail($id);
-        $this->name = $this->user->name;
-        $this->email = $this->user->email;
-        $this->role_id = $this->user->role_id;
-        $this->showEditModal = true;
-    }
-
-    public function update()
-    {
-        $this->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:users,email,' . $this->editingUserId,
-            'password' => 'nullable|min:6',
-            'role_id' => 'required'
-        ]);
-
-        $user = User::findOrFail($this->editingUserId);
+        session()->flash('message', 'Usuário criado com sucesso');
         
-        $userData = [
-            'name' => $this->name,
-            'email' => $this->email,
-            'role_id' => $this->role_id,
-        ];
+        // Só fecha o modal se passou pela validação
+        $this->dispatch('user-created');
+    }
 
-        if (!empty($this->password)) {
-            $userData['password'] = bcrypt($this->password);
-        }
 
-        $user->update($userData);
+   public function update($id){
 
-        $this->closeEditModal();
-        session()->flash('message', 'Usuário atualizado com sucesso.');
+    try {
+        
+        $user = User::findOrFail($this->id);
+    } catch (\Execption $e) {
+        session()->flash('error', 'Error ao atualizar o usuário' . $e->getMessage());
+    }
+    
+    
+
+
+
+    
+   }
+
+   public function delete($id)
+   {
+    try {
+        $user = User::findOrFail($id);  
+        $user->delete();
         $this->users = User::all();
-    }
+        session()->flash('message', 'Usuário deletado com sucesso');
 
-    public function delete()
-    {
-        if ($this->userIdToDelete) {
-            User::find($this->userIdToDelete)->delete();
-        }
-        $this->confirmationDelete = false;
-        $this->userIdToDelete = null;
-        $this->users = User::all();
+    } catch (\Exception $e) {
+        session()->flash('error', 'Erro ao deletar o usuário' . $e->getMessage());
     }
+   }
 
-    public function teste(){
-        dd("ta pegando");
-    }
-
-    public function confirmDelete($id)
-    {
-        $this->userIdToDelete = $id;
-        $this->confirmationDelete = true;
-    }
-
-    public function showCreateModal()
-    {
-        $this->reset(['name', 'email', 'password', 'role_id']);
-        $this->showCreateModal = true;
-    }
-
-    public function closeCreateModal()
-    {
-        $this->showCreateModal = false;
-        $this->reset(['name', 'email', 'password', 'role_id']);
-    }
-
-    public function closeEditModal()
-    {
-        $this->showEditModal = false;
-        $this->reset(['name', 'email', 'password', 'role_id', 'user', 'editingUserId']);
-    }
-
-    public function closeModal()
-    {
-        $this->confirmationDelete = false;
-        $this->userIdToDelete = null;
-    }
-
-    public function resetForm()
-    {
-        $this->reset(['name', 'email', 'password', 'role_id', 'user']);
-    }
+   
 
     public function render()
     {
