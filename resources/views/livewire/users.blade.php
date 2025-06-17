@@ -1,4 +1,4 @@
-<div class="container mx-auto px-4 py-8" x-data="{ showCreateModal: false, showEditModal: false, showDeleteModal: false, id: null }" @user-created.window="showCreateModal = false">
+<div class="container mx-auto px-4 py-8" x-data="{ showCreateModal: false, showEditModal: false, showDeleteModal: false, id: null, editId: null,  }" @user-created.window="showCreateModal = false">
     <div class="flex justify-between items-center mb-6">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">Gerenciamento de Usuários</h1>
@@ -116,7 +116,7 @@
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex justify-end space-x-2">
-                                    <button  @click="id = {{ $user->id }}; showEditModal = true"
+                                    <button  @click="editId = {{ $user->id }}; showEditModal = true; $wire.startEdit({{ $user->id }})"
                                         class="cursor-pointer text-green-500 hover:text-green-700 p-1 rounded-full hover:bg-green-50 transition-colors"
                                         title="Editar">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor"
@@ -174,7 +174,7 @@
                             <h3 class="text-xl font-semibold text-gray-900 mb-2">Editar Usuário</h3>
                             <p class="text-sm text-gray-500 mb-6">Atualize as informações do usuário</p>
 
-                            <form wire:submit.prevent="update(id)" class="w-full max-w-md">
+                            <form wire:submit.prevent="update" class="w-full max-w-md">
                                 <div class="mb-4">
                                     <label class="block text-gray-700 text-sm font-medium mb-2">Nome
                                         Completo</label>
@@ -262,7 +262,7 @@
                                         class="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                         Cancelar
                                     </button>
-                                    <button type="submit"
+                                    <button type="submit" @click="showEditModal = false"
                                         class="cursor-pointer px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                         Salvar Alterações
                                     </button>
